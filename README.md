@@ -3,8 +3,6 @@
 Calcolatore di impasti per pizza, in italiano e in inglese.
 Pizza dough calculator, in Italian and English.
 
-Le quantità usano le formule del **Calcolapizza 2.1** de [La Confraternita della Pizza](http://laconfraternitadellapizza.forumfree.it/), con un'interfaccia nuova.
-
 ## Come funziona
 
 All'apertura un wizard in 5 passi chiede tipo di pizza, quantità, tempo di lievitazione, temperatura di casa e pasta di riporto. Poi mostra il calcolatore con tutti i valori modificabili.
