@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Calcolapizza</title>
 <meta name="description" content="Calcolatore di impasti per pizza · Pizza dough calculator">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
@@ -134,6 +135,23 @@ h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance}
 .actions{display:flex;gap:10px;flex-wrap:wrap}
 .foot{margin:6px 0 0;color:var(--muted);font-size:12.5px;text-align:center}
 .foot a{color:var(--basil)}
+.tll{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px}
+.tll span{display:inline-flex;align-items:center;gap:8px}
+.tll i{width:12px;height:12px;border-radius:3px;flex:none}
+.tll i.r{background:#c4471a}
+.tll i.f{background:#2f6f94}
+.panbox{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:12px;margin-top:6px}
+.chipb{font-weight:600;border:1px solid var(--basil);background:transparent;color:var(--basil);border-radius:10px;padding:10px 14px;cursor:pointer;text-align:left;min-height:44px}
+.chipb[aria-pressed="true"]{background:var(--basil-soft)}
+.chipb.sm{padding:6px 12px;min-height:36px;font-size:13.5px;font-weight:500}
+.panfields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-top:6px}
+@media (max-width:420px){.panfields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pf{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pf label{font-size:13px;color:var(--muted)}
+.pfi{display:flex;align-items:center;gap:6px}
+.pfi input{width:100%;min-width:0;font:500 16px var(--font-mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;text-align:right;min-height:40px}
+.pfi em{font-style:normal;color:var(--muted);font-size:13px}
+.chiprow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 0}
 .sr{position:absolute;left:-9999px}
 [hidden]{display:none!important}
 </style>

@@ -39,7 +39,9 @@ it:{
   flour:"Farina", water:"Acqua", salt:"Sale", oil:"Olio / strutto / burro", old:"Pasta di riporto", yeast:"Lievito di birra fresco",
   ofFlour:"{x}% sulla farina", ofDough:"{x}% sull'impasto", flourSub:"100%", flourSubOld:"100% (esclusa la pasta di riporto)",
   times:"Tempi", room:"ambiente", fridge:"frigo", fridgeFull:"in frigorifero",
-  tlcap:"{a} a {c} °C", and:" e ", tlend:". Tieni fuori l'impasto un po' prima di stenderlo.",
+  tlroom:"{h} h a temperatura ambiente ({c} °C)", tlfridge:"{h} h in frigorifero", tlnote:"Tieni fuori l'impasto un po' prima di stenderlo.",
+  pan_btn:"Guidami in base alle dimensioni della teglia", pan_l:"Lunghezza", pan_wd:"Larghezza", pan_n:"Numero di teglie", pan_t:"Spessore",
+  th_sottile:"Sottile", th_media:"Media", th_alta:"Alta", pan_res:"{a} cm² · {w} g di impasto per teglia", pan_sizes:"Misure comuni",
   dry:"Lievito secco (circa)", perBall:"Farina per ogni paniello", forza:"Forza farina indicativa",
   note:"Le quantità seguono le formule del Calcolapizza 2.1 e sono arrotondate come nell'originale.",
   noteTeglia:"In teglia il lievito aumenta, come nel Calcolapizza 2.1. Le quantità sono arrotondate come nell'originale.",
@@ -83,7 +85,9 @@ en:{
   flour:"Flour", water:"Water", salt:"Salt", oil:"Oil / lard / butter", old:"Old dough", yeast:"Fresh yeast",
   ofFlour:"{x}% of flour", ofDough:"{x}% of dough", flourSub:"100%", flourSubOld:"100% (old dough not included)",
   times:"Timing", room:"room", fridge:"fridge", fridgeFull:"in the fridge",
-  tlcap:"{a} at {c} °C", and:" and ", tlend:". Take the dough out a while before shaping it.",
+  tlroom:"{h} h at room temperature ({c} °C)", tlfridge:"{h} h in the fridge", tlnote:"Take the dough out a while before shaping it.",
+  pan_btn:"Guide me by pan size", pan_l:"Length", pan_wd:"Width", pan_n:"Number of pans", pan_t:"Thickness",
+  th_sottile:"Thin", th_media:"Medium", th_alta:"Thick", pan_res:"{a} cm² · {w} g of dough per pan", pan_sizes:"Common sizes",
   dry:"Dry yeast (approx.)", perBall:"Flour per dough ball", forza:"Suggested flour strength",
   note:"Amounts follow the formulas of Calcolapizza 2.1 and are rounded as in the original.",
   noteTeglia:"For pan pizza the yeast goes up, as in Calcolapizza 2.1. Amounts are rounded as in the original.",
@@ -93,24 +97,29 @@ en:{
 }};
 
 /* ---------- state ---------- */
-var BASE={n:4,w:250,h:62,s:50,o:0,t:24,f:16,c:20,p:0,ptype:2,teglia:false};
+var BASE={n:4,w:250,h:62,s:50,o:0,t:24,f:20,c:20,p:0,ptype:2,teglia:false};
 var PRESETS={
-  napoletana:{n:4,w:250,h:62,s:50,o:0,t:24,f:16,teglia:false},
-  tonda:{n:4,w:230,h:58,s:45,o:30,t:12,f:0,teglia:true},
-  teglia:{n:2,w:550,h:78,s:50,o:25,t:48,f:36,teglia:true},
-  pinsa:{n:4,w:270,h:80,s:40,o:20,t:48,f:36,teglia:false},
+  napoletana:{n:4,w:250,h:62,s:50,o:0,t:24,f:20,teglia:false},
+  tonda:{n:4,w:230,h:58,s:45,o:0,t:12,f:0,teglia:false},
+  teglia:{n:2,w:550,h:70,s:50,o:0,t:48,f:44,teglia:true},
+  pinsa:{n:4,w:270,h:80,s:40,o:0,t:48,f:44,teglia:false},
   custom:{}
 };
-var TIMES={sera:{t:8,f:0},domani:{t:24,f:16},due:{t:48,f:36}};
+/* partenza di chi apre l'app la prima volta: pizza in teglia alla romana */
+var DEFAULTS=Object.assign({},BASE,PRESETS.teglia);
+var TIMES={sera:{t:8,f:0},domani:{t:24,f:20},due:{t:48,f:44}};
+/* grammi di impasto per cm² di teglia (stima, da confermare) */
+var DENS={sottile:0.40,media:0.50,alta:0.65};
 var TEMPS={fresco:16,normale:20,caldo:26};
 /* limiti del Calcolapizza 2.1; f e p dipendono dagli altri valori */
 var LIMITS={n:[1,1000],w:[1,10000],h:[50,100],s:[0,70],o:[0,150],t:[3,96],c:[15,35]};
 var SLIDER={n:[1,40,1],w:[80,600,5],h:[50,100,1],s:[0,70,1],o:[0,150,1],t:[3,96,1],c:[15,35,1]};
 var HINT={h:"h_h",s:"h_s",o:"h_o",t:"h_t",f:"h_f",c:"h_c",p:"h_p"};
-var NSTEPS=5, KEY="pizzacalculator.v2";
+var NSTEPS=5, KEY="pizzacalculator.v3";
 
-var S=Object.assign({},BASE,{lang:null,done:false,step:0,preset:"napoletana",time:"domani",temp:"normale",riporto:false});
+var S=Object.assign({},DEFAULTS,{lang:null,done:false,step:0,preset:"teglia",time:"due",temp:"normale",riporto:false,pan:{on:false,l:40,wd:30,thick:"media",n:1}});
 try{var raw=localStorage.getItem(KEY); if(raw){S=Object.assign(S,JSON.parse(raw));}}catch(e){}
+if(!S.pan)S.pan={on:false,l:40,wd:30,thick:"media",n:1};
 if(!S.lang){S.lang=(navigator.language||"it").slice(0,2)==="it"?"it":"en";}
 if(S.lang!=="it"&&S.lang!=="en")S.lang="it";
 
@@ -170,7 +179,27 @@ function syncFields(except){
   });
   ["f","p"].forEach(function(k){var h=$("hint_"+k);if(h)h.textContent=hintText(k);});
 }
+function panWeight(){return Math.round(S.pan.l*S.pan.wd*DENS[S.pan.thick]/10)*10;}
+function applyPan(){S.n=clamp("n",S.pan.n);S.w=clamp("w",panWeight());enforce();}
+function panRes(){return t("pan_res",{a:fmt(S.pan.l*S.pan.wd,0),w:fmt(panWeight(),0)});}
+function panHTML(){
+  if(!S.teglia)return "";
+  var P=S.pan, h='<div class="panbox"><button type="button" class="chipb" data-act="pan" aria-pressed="'+P.on+'">'+t("pan_btn")+'</button>';
+  if(P.on){
+    h+='<div class="panfields">'+
+      [["l","pan_l","cm"],["wd","pan_wd","cm"],["n","pan_n",""]].map(function(f){
+        return '<div class="pf"><label for="pan_'+f[0]+'">'+t(f[1])+'</label><div class="pfi"><input id="pan_'+f[0]+'" data-pan="'+f[0]+'" type="number" inputmode="decimal" min="1" step="any" value="'+P[f[0]]+'"><em>'+f[2]+'</em></div></div>';}).join("")+
+      '</div><div class="chiprow"><span class="eyebrow">'+t("pan_sizes")+'</span>'+["30x40","40x60","25x35"].map(function(x){
+        return '<button type="button" class="chipb sm" data-act="pansize" data-v="'+x+'">'+x.replace("x"," × ")+'</button>';}).join("")+'</div>'+
+      '<div class="qrow"><label>'+t("pan_t")+'</label><div class="segfull" role="group">'+["sottile","media","alta"].map(function(k){
+        return '<button type="button" data-act="thick" data-v="'+k+'" aria-pressed="'+(P.thick===k)+'">'+t("th_"+k)+'</button>';}).join("")+'</div></div>'+
+      '<p class="note" id="pan_res">'+panRes()+'</p>';
+  }
+  return h+'</div>';
+}
+function refreshPan(){var el=$("panbox");if(el)el.innerHTML=panHTML();}
 function setVal(k,v,except){
+  if((k==="n"||k==="w")&&S.pan.on){S.pan.on=false;refreshPan();}
   S[k]=clamp(k,v);
   enforce();
   syncFields(except);
@@ -196,7 +225,7 @@ function renderWizard(){
     h+='<div class="opts">'+["napoletana","tonda","teglia","pinsa","custom"].map(function(p){return opt("preset",p,t("p_"+p),t("d_"+p),S.preset===p);}).join("")+'</div>';
   }else if(st===1){
     h+='<div class="card">'+stepper("n","",1)+stepper("w","g",10)+
-       '<label class="switch" for="teglia"><input id="teglia" type="checkbox"'+(S.teglia?" checked":"")+'><div><b>'+t("teglia")+'</b><span>'+t("tegliaD")+'</span></div></label></div>';
+       '<label class="switch" for="teglia"><input id="teglia" type="checkbox"'+(S.teglia?" checked":"")+'><div><b>'+t("teglia")+'</b><span>'+t("tegliaD")+'</span></div></label><div id="panbox">'+panHTML()+'</div></div>';
   }else if(st===2){
     h+='<div class="opts">'+["sera","domani","due","custom"].map(function(k){return opt("time",k,t("t_"+k),t("td_"+k),S.time===k);}).join("")+'</div>';
     if(S.time==="custom")h+='<div class="card">'+field("t","h")+field("f","h")+'</div>';
@@ -216,14 +245,14 @@ function renderWizard(){
 function renderApp(){
   var h='<div class="pills" id="pills"></div><div class="grid"><div class="cards">'+
     '<div class="card"><h3>'+t("c_qty")+'</h3>'+field("n","")+field("w","g")+
-      '<label class="switch" for="teglia"><input id="teglia" type="checkbox"'+(S.teglia?" checked":"")+'><div><b>'+t("teglia")+'</b><span>'+t("tegliaD")+'</span></div></label></div>'+
+      '<label class="switch" for="teglia"><input id="teglia" type="checkbox"'+(S.teglia?" checked":"")+'><div><b>'+t("teglia")+'</b><span>'+t("tegliaD")+'</span></div></label><div id="panbox">'+panHTML()+'</div></div>'+
     '<div class="card"><h3>'+t("c_dough")+'</h3>'+field("h","%")+field("s","g/L")+field("o","g/L")+'</div>'+
     '<div class="card"><h3>'+t("c_rise")+'</h3>'+field("t","h")+field("f","h")+field("c","°C")+'</div>'+
     '<div class="card"><h3>'+t("c_old")+'</h3>'+field("p","%")+'<div class="qrow" id="ptw"><label>'+t("ptype")+'</label>'+ptypeSeg()+'</div></div>'+
     '</div><aside class="bench" aria-label="'+esc(t("ing"))+'"><div class="sum"><h2 style="margin-right:auto">'+t("ing")+'</h2></div>'+
     '<div class="sum"><span>'+t("total")+' <b id="tot"></b></span><span>'+t("forza")+' <b id="forza"></b></span></div>'+
     '<ul class="ing" id="ing"></ul><div class="stack" id="stack" aria-hidden="true"></div>'+
-    '<div class="time"><h3>'+t("times")+'</h3><div class="tl" id="tl"></div><p id="tlc"></p></div>'+
+    '<div class="time"><h3>'+t("times")+'</h3><div class="tl" id="tl"></div><div class="tll" id="tll"></div><p id="tlc"></p></div>'+
     '<div class="alt"><div><span>'+t("dry")+'</span><b id="dry"></b></div><div><span>'+t("perBall")+'</span><b id="pf"></b></div></div>'+
     '<div class="actions"><button type="button" class="btn" id="copy">'+t("copy")+'</button><button type="button" class="btn ghost" id="reset">'+t("reset")+'</button></div>'+
     '<p class="note" id="cn"></p></aside></div>';
@@ -254,11 +283,11 @@ function updateResults(){
     return '<li class="'+(x.cls||"")+'"><span class="dot" style="background:'+x.col+'"></span><span class="nm">'+esc(x.k)+'</span><span class="g">'+x.txt+'<i>g</i></span><span class="sub">'+esc(x.sub)+'</span></li>';}).join("");
   var tot=ROWS.reduce(function(a,x){return a+x.g;},0);
   $("stack").innerHTML=ROWS.map(function(x){return '<div style="flex:'+Math.max(x.g,tot*0.006)+';background:'+x.col+'"></div>';}).join("");
-  var rm=S.t-S.f, tl="";
-  if(rm>0)tl+='<div class="r" style="flex:'+rm+'">'+rm+' h '+t("room")+'</div>';
-  if(S.f>0)tl+='<div class="f" style="flex:'+S.f+'">'+S.f+' h '+t("fridge")+'</div>';
-  $("tl").innerHTML=tl;
-  $("tlc").textContent=(rm>0?t("tlcap",{a:rm+" h",c:S.c}):"")+(rm>0&&S.f>0?t("and"):"")+(S.f>0?S.f+" h "+t("fridgeFull"):"")+t("tlend");
+  var rm=S.t-S.f, tl="", lg="";
+  if(rm>0){tl+='<div class="r" style="flex:'+rm+'">'+(rm/S.t>=0.1?rm+' h':'')+'</div>';lg+='<span><i class="r"></i>'+t("tlroom",{h:fmt(rm,0),c:S.c})+'</span>';}
+  if(S.f>0){tl+='<div class="f" style="flex:'+S.f+'">'+(S.f/S.t>=0.1?S.f+' h':'')+'</div>';lg+='<span><i class="f"></i>'+t("tlfridge",{h:fmt(S.f,0)})+'</span>';}
+  $("tl").innerHTML=tl; $("tll").innerHTML=lg;
+  $("tlc").textContent=t("tlnote");
   $("dry").textContent=fmt(r.yeast/3,2)+" g"; $("pf").textContent=fmt(r.flour/S.n,0)+" g";
   $("cn").textContent=S.teglia?t("noteTeglia"):t("note");
 }
@@ -279,11 +308,14 @@ document.addEventListener("click",function(e){
   var a=b.dataset.act, v=b.dataset.v;
   if(b.id==="l_it"||b.id==="l_en"){S.lang=b.id==="l_it"?"it":"en"; save(); render(); return;}
   if(b.id==="restart"){S.done=false;S.step=0;save();render();return;}
-  if(b.id==="reset"){S=Object.assign({},S,BASE,PRESETS[S.preset]||{});save();render();return;}
+  if(b.id==="reset"){S=Object.assign({},S,BASE,PRESETS[S.preset]||{});S.pan.on=false;save();render();return;}
+  if(a==="pan"){S.pan.on=!S.pan.on;if(S.pan.on)applyPan();save();refreshPan();syncFields();if(S.done)updateResults();return;}
+  if(a==="thick"){S.pan.thick=v;applyPan();save();refreshPan();syncFields();if(S.done)updateResults();return;}
+  if(a==="pansize"){var d=v.split("x");S.pan.l=Number(d[0]);S.pan.wd=Number(d[1]);applyPan();save();refreshPan();syncFields();if(S.done)updateResults();return;}
   if(b.id==="copy"){copyRecipe(b);return;}
   if(a==="inc"||a==="dec"){var k=b.dataset.k,st=Number(b.dataset.step)*(a==="inc"?1:-1);setVal(k,S[k]+st);return;}
   if(a==="ptype"){S.ptype=Number(v);enforce();save();if(S.done){syncFields();updateResults();}else renderWizard();return;}
-  if(a==="preset"){S.preset=v;S.riporto=false;Object.assign(S,BASE,PRESETS[v]||{});S.time=v==="custom"?"custom":(PRESETS[v].t===8?"sera":PRESETS[v].t===24?"domani":PRESETS[v].t===48?"due":"custom");S.temp="normale";save();renderWizard();return;}
+  if(a==="preset"){S.preset=v;S.riporto=false;S.pan.on=false;Object.assign(S,BASE,PRESETS[v]||{});S.time=v==="custom"?"custom":(PRESETS[v].t===8?"sera":PRESETS[v].t===24?"domani":PRESETS[v].t===48?"due":"custom");S.temp="normale";save();renderWizard();return;}
   if(a==="time"){S.time=v;if(TIMES[v]){S.t=TIMES[v].t;S.f=TIMES[v].f;}enforce();save();renderWizard();return;}
   if(a==="temp"){S.temp=v;if(TEMPS[v])S.c=TEMPS[v];save();renderWizard();return;}
   if(a==="riporto"){S.riporto=v==="si";if(!S.riporto)S.p=0;else if(S.p===0)S.p=Math.round(Math.min(3,pmax()/2)*10)/10;enforce();save();renderWizard();return;}
@@ -292,6 +324,11 @@ document.addEventListener("click",function(e){
 });
 document.addEventListener("input",function(e){
   var el=e.target;
+  if(el.dataset&&el.dataset.pan){
+    var pv=Number(el.value); if(!isFinite(pv)||pv<=0)return;
+    S.pan[el.dataset.pan]=el.dataset.pan==="n"?Math.max(1,Math.round(pv)):Math.min(200,pv);
+    applyPan();save();syncFields();var pr=$("pan_res");if(pr)pr.textContent=panRes();if(S.done)updateResults();return;
+  }
   if(el.dataset&&el.dataset.k){
     if(el.type==="number"&&el.value==="")return; // campo svuotato mentre si scrive
     setVal(el.dataset.k,el.value,el);
@@ -299,7 +336,7 @@ document.addEventListener("input",function(e){
 });
 document.addEventListener("change",function(e){
   var el=e.target;
-  if(el.id==="teglia"){S.teglia=el.checked;enforce();save();if(S.done){syncFields();updateResults();}return;}
+  if(el.id==="teglia"){S.teglia=el.checked;enforce();save();refreshPan();if(S.done){syncFields();updateResults();}return;}
   if(el.dataset&&el.dataset.k){setVal(el.dataset.k,el.value);}
 });
 
