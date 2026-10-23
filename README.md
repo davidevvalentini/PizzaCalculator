@@ -8,7 +8,8 @@ Pizza dough calculator, in Italian and English.
 All'apertura un wizard in 5 passi chiede tipo di pizza, quantità, tempo di lievitazione, temperatura di casa e pasta di riporto. Poi mostra il calcolatore con tutti i valori modificabili.
 
 - Farina, acqua, sale, olio, pasta di riporto e lievito di birra fresco, arrotondati come nell'originale
-- Preset: Napoletana, Tonda romana (in teglia), Teglia romana (in teglia), Pinsa
+- Preset: Napoletana, Tonda romana, Teglia romana (in teglia, 30 × 40 cm), Pinsa
+- Pizza in teglia: si inseriscono lunghezza e larghezza della teglia e il numero di teglie; il peso dell'impasto è proposto in base alla regola 30 × 40 cm = 620-650 g (circa 0,53 g per cm²) e si può modificare a mano
 - Stessi limiti dell'originale: idratazione 50-100%, sale 0-70 g/L, olio 0-150 g/L, 3-96 ore, 15-35 °C, frigo al massimo le ore totali meno 1, pasta di riporto fino al massimo calcolato
 - Lingua IT / EN e tema chiaro/scuro automatici
 
